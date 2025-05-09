@@ -24,6 +24,9 @@ jobs:
       - name: Accept licenses
         run: yes | sdkmanager --licenses
 
+      - name: Set execute permission for gradlew
+        run: chmod +x ./gradlew
+
       - name: Build Aniwatch Extension
         run: ./gradlew :src:en:aniwatch:assembleRelease
 
