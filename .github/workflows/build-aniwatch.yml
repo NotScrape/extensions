@@ -1,0 +1,46 @@
+name: Build Aniwatch Extension
+
+on:
+  push:
+    branches: [Aniwatch]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept licenses
+        run: yes | sdkmanager --licenses
+
+      - name: Build Aniwatch Extension
+        run: ./gradlew :src:en:aniwatch:assembleRelease
+
+      - name: Rename APK
+        run: |
+          mkdir -p output
+          cp ./src/en/aniwatch/build/outputs/apk/release/*.apk ./output/aniwatch-latest.apk
+
+      - name: Upload to apk-builds branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch
+          git switch -c apk-builds origin/apk-builds || git checkout --orphan apk-builds
+          git rm -rf . || true
+          mkdir -p aniwatch
+          cp output/aniwatch-latest.apk aniwatch/
+          git add aniwatch/
+          git commit -m "Upload latest Aniwatch APK [CI]" || echo "No changes to commit"
+          git push -u origin apk-builds --force
