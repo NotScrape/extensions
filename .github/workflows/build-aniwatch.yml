@@ -24,6 +24,12 @@ jobs:
       - name: Accept licenses
         run: yes | sdkmanager --licenses
 
+      - name: Set environment variables for CI
+        run: |
+          echo "CI_CHUNK_SIZE=9999" >> $GITHUB_ENV
+          echo "CI_CHUNK_NUM=0" >> $GITHUB_ENV
+          echo "CI=true" >> $GITHUB_ENV
+
       - name: Set execute permission for gradlew
         run: chmod +x ./gradlew
 
@@ -36,6 +42,8 @@ jobs:
           find src -type f -name "*.apk" -exec cp {} output/ \;
 
       - name: Upload to apk-builds branch
+        env:
+          TOKEN: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -46,4 +54,5 @@ jobs:
           cp output/*.apk all-apks/
           git add all-apks/
           git commit -m "Upload all extension APKs [CI]" || echo "No changes to commit"
-          git push -u origin apk-builds --force
+          git push https://x-access-token:${TOKEN}@github.com/NotScrape/extensions.git apk-builds --force
+          
