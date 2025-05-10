@@ -8,21 +8,15 @@ File(rootDir, "lib").eachDir { include("lib:${it.name}") }
 // Load all modules under /lib-multisrc
 File(rootDir, "lib-multisrc").eachDir { include("lib-multisrc:${it.name}") }
 
-if (System.getenv("CI") != "true") {
-    // Local development (full project build)
+// Determine if we should load all extensions or chunked ones
+val chunkSize = System.getenv("CI_CHUNK_SIZE")?.toIntOrNull()
+val chunk = System.getenv("CI_CHUNK_NUM")?.toIntOrNull()
 
-    /**
-     * Add or remove modules to load as needed for local development here.
-     */
+if (System.getenv("CI") != "true" || chunkSize == null || chunk == null) {
+    // Local development or CI with no chunking
     loadAllIndividualExtensions()
-    // loadIndividualExtension("all", "jellyfin")
 } else {
-    // Running in CI (GitHub Actions)
-
-    val chunkSize = System.getenv("CI_CHUNK_SIZE").toInt()
-    val chunk = System.getenv("CI_CHUNK_NUM").toInt()
-
-    // Loads individual extensions
+    // Running in CI with chunking
     File(rootDir, "src").getChunk(chunk, chunkSize)?.forEach {
         loadIndividualExtension(it.parentFile.name, it.name)
     }
@@ -35,6 +29,7 @@ fun loadAllIndividualExtensions() {
         }
     }
 }
+
 fun loadIndividualExtension(lang: String, name: String) {
     include("src:$lang:$name")
 }
