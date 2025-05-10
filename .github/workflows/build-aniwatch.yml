@@ -1,4 +1,4 @@
-name: Build Aniwatch Extension
+name: Build All Extensions
 
 on:
   push:
@@ -24,21 +24,16 @@ jobs:
       - name: Accept licenses
         run: yes | sdkmanager --licenses
 
-      - name: Set CI_CHUNK_SIZE and CI_CHUNK_NUM environment variables
-        run: |
-          echo "CI_CHUNK_SIZE=1" >> $GITHUB_ENV
-          echo "CI_CHUNK_NUM=1" >> $GITHUB_ENV
-
       - name: Set execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Build Aniwatch Extension
-        run: ./gradlew :src:en:aniwatch:assembleRelease
+      - name: Build All Extensions
+        run: ./gradlew assembleRelease
 
-      - name: Rename APK
+      - name: Collect all APKs
         run: |
           mkdir -p output
-          cp ./src/en/aniwatch/build/outputs/apk/release/*.apk ./output/aniwatch-latest.apk
+          find src -type f -name "*.apk" -exec cp {} output/ \;
 
       - name: Upload to apk-builds branch
         run: |
@@ -47,8 +42,8 @@ jobs:
           git fetch
           git switch -c apk-builds origin/apk-builds || git checkout --orphan apk-builds
           git rm -rf . || true
-          mkdir -p aniwatch
-          cp output/aniwatch-latest.apk aniwatch/
-          git add aniwatch/
-          git commit -m "Upload latest Aniwatch APK [CI]" || echo "No changes to commit"
+          mkdir -p all-apks
+          cp output/*.apk all-apks/
+          git add all-apks/
+          git commit -m "Upload all extension APKs [CI]" || echo "No changes to commit"
           git push -u origin apk-builds --force
