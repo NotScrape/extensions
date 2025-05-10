@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      TOKEN: ${{ secrets.GH_PAT }}  # Make the token available globally for all steps
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -42,8 +45,6 @@ jobs:
           find src -type f -name "*.apk" -exec cp {} output/ \;
 
       - name: Upload to apk-builds branch
-        env:
-          TOKEN: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -55,4 +56,3 @@ jobs:
           git add all-apks/
           git commit -m "Upload all extension APKs [CI]" || echo "No changes to commit"
           git push https://x-access-token:${TOKEN}@github.com/NotScrape/extensions.git apk-builds --force
-          
